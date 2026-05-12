@@ -60,6 +60,7 @@ def dijkstra(rc, gold, R, C, A, B):
 
     while not flag and len(q) > 0:
       c, rc, pos, g, gm = heappop(q)
+      
       i = 0
       while not flag and i < 4:
         nflag, nrc, npos, ng, ngm = move(i, rc, pos, gm.copy(), g, R, C)
@@ -89,12 +90,12 @@ def main():
         R, C, A, B = list(map(int, stdin.readline().split()))
         gold = set()
         for j in range(R):
-            aux = stdin.readline().strip()
+            aux = stdin.readline()
             for k in range(C):
-                if aux[k] == 'S':
-                    rc = (j, k)
-                elif aux[k] == 'G':
+                if aux[k] == 'G':
                     gold.add((j, k))
+                elif aux[k] == 'S':
+                    rc = (j, k)
 
         flag, cost = dijkstra(rc, gold, R, C, A, B)
         
