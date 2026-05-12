@@ -10,52 +10,65 @@ Código de estudiante: 8977586,
 from sys import stdin
 from heapq import heappop, heappush
 
-def move(dir, pos):
+def move(d, rc, pos, m, g, cg, R, C):
+    #0 = north, 1 = east, 2 = south, 3 = west
     op = {0: 2, 1: 3, 2: 0, 3: 1, 4: 5, 5: 4}
     
-    #0 = north, 1 = east, 2 = south, 3 = west
-    if dir == 0:
+    if d == 0:
         ans = (pos[1], op[pos[0]], pos[0])
-    elif dir == 1:
+        flag = rc[0] - 1 >= 0
+        nrc = (rc[0] - 1, rc[1])
+    elif d == 1:
         ans = (pos[2], pos[1], op[pos[0]])
-    elif dir == 2:
+        flag = rc[1] + 1 < C
+        nrc = (rc[0], rc[1] + 1)
+    elif d == 2:
         ans = (op[pos[1]], pos[0], pos[2])
+        flag = rc[0] + 1 < R
+        nrc = (rc[0] + 1, rc[1])
     else:
         ans = (op[pos[2]], pos[1], pos[0])
-    return ans
+        flag = rc[1] - 1 >= 0
+        nrc = (rc[0], rc[1] - 1)
 
-def dijkstra(m, rc, A, B):
-    gold = [False for _ in range(6)]
-    vis = set()
-    count = 0
+    if m[nrc[0]][nrc[1]] == 'G':
+        if g[ans[0]]:
+            cg += 1
+        g[ans[0]] = True
+    
+    return (flag, nrc, ans, g, cg)
+
+def dijkstra(m, rc, R, C, A, B):
+    #estado: ((row, col), (floor, north, east), gold, cgold)
+    
+    act = (0, rc, (0, 1, 4), [False, False, False, False, False, False], 0)
+    vis = {(rc, (0, 1, 4), [False, False, False, False, False, False], 0): 0}
+    flag = False
     cost = 0
+    ans = 0
     q = []
-    act = (rc, (0, 1, 4), 0)
+    heappush(q, act)
 
-    while count < 6 and len(queue) > 0:
-      rc, pos, count = heappop(q)
-      
-      #problema de mario
-      if u == a + b: flag = True
-      else:
-        if vis[(u, l, k)] == c:
-          # se coloca los zapatos especiales
-          if l != L and k > 0:
-            if (u, L, k - 1) not in vis or vis[(u, L, k - 1)] > c:              
-              heappush(queue, (c, u, L, k - 1))
-              vis[(u, L, k - 1)] = c
-          for (v, p) in G[u]:
-            if (v, 0, k) not in vis or vis[(v, 0, k)] > c + p:           
-              # se mueve sin usar los zapatos
-              heappush(queue, (c + p, v, 0, k))
-              vis[(v, 0, k)] = c + p
-            # se mueve usando los zapatos
-            if l >= p and (u <= a or l == L):
-              if (v, l - p, k) not in vis or vis[(v, l - p, k)] > c:
-                heappush(queue, (c, v, l - p, k))
-                vis[(v, l - p, k)] = c
+    while not flag and len(queue) > 0:
+      c, rc, pos, g, cg = heappop(q)
+      i = 0
+      while not flag and i < 4:
+          nflag, nrc, npos, ng, ncg = move(i, rc, pos, m, g, cg, R, C)
+          
+          ac = A
+          if ncg > cg:
+              ac = B
+          
+          if nflag and ((nrc, npos, ng, ncg) not in vis or vis[(nrc, npos, ng, ncg)] > c + ac):
+              vis[(nrc, npos, ng, ncg)] = c + ac
+              
+              if ncg == 6:
+                  flag = True
+                  cost = c + ac
+              else:
+                  heappush(q, (c + ac, nrc, npos, ng, ncg))
 
-    return (count == 6, cost)
+    return (flag, cost)
         
 
 def main():
@@ -70,7 +83,7 @@ def main():
                 if aux[k] == 'S':
                     rc = (j, k)
                 
-        flag, cost = dijkstra(m, rc, A, B)
+        flag, cost = dijkstra(m, rc, R, C, A, B)
         
         if flag:
             print("Screw you guys, I got all the gold for", cost, "cost!")
