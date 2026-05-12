@@ -67,7 +67,7 @@ def main():
             aux = stdin.readline().strip()
             for k in range(C):
                 m[j][k] = aux[k]
-                if m[j][k] == 'S':
+                if aux[k] == 'S':
                     rc = (j, k)
                 
         flag, cost = dijkstra(m, rc, A, B)
