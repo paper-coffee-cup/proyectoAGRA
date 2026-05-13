@@ -24,6 +24,23 @@ def move(d, rc, R, C):
     flag = nrc[0] >= 0 and nrc[0] < R and nrc[1] >= 0 and nrc[1] < C
     return (flag, nrc)
 
+"""
+def move2(d, rc, R, C):
+    #0 = north, 1 = east, 2 = south, 3 = west
+    dire = ((-1, 0), (0, 1), (1, 0), (0, -1))
+    
+    nrc = (rc[0] + dire[d][0], rc[1] + dire[d][1])
+    if d == 0:
+        flag = nrc[0] >= 0
+    elif d == 1:
+        flag = nrc[1] < C
+    elif d == 2:
+        flag = nrc[0] < R
+    else:
+        flag = nrc[1] >= 0
+    return (flag, nrc)
+"""
+
 def roll(d, nrc, pos):
     #0 = north, 1 = east, 2 = south, 3 = west
     op = (2, 3, 0, 1, 5, 4)
@@ -61,9 +78,10 @@ def dijkstra(rc, gold, R, C, A, B):
     q = []
     heappush(q, act)
 
-    while not flag and len(q) > 0:
+    while not flag and len(q) != 0:
       c, rc, pos, g, gm = heappop(q)
       i = 0
+      
       while not flag and i < 4 and vis[(rc, pos, g, frozenset(gm))] == c:
         nflag, nrc = move(i, rc, R, C)
         ac = A
@@ -79,13 +97,14 @@ def dijkstra(rc, gold, R, C, A, B):
             
             if ns not in vis or vis[ns] > cost:
                 #63 = 111111
-                
-                flag = ng == 63
-                if not flag:
+
+                if ng == 63:
+                    flag = True
+                else:
                     vis[ns] = cost
-                    heappush(q, (cost, nrc, npos, ng, ngm))
-                    
+                    heappush(q, (cost, nrc, npos, ng, ngm))   
         i += 1
+        
     return (flag, cost)
         
 
