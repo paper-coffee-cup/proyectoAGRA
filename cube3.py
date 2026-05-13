@@ -61,7 +61,7 @@ def dijkstra(rc, gold, R, C, A, B):
     while not flag and len(q) > 0:
       c, rc, pos, g, gm = heappop(q)
       i = 0
-      while not flag and i < 4:
+      while vis[(rc, pos, g, frozenset(gm))] == c and not flag and i < 4:
         nflag, nrc, npos, ng, ngm = move(i, rc, pos, gm.copy(), g, R, C)
         ngm = ngm.copy()
         ac = A
