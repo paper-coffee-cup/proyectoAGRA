@@ -7,6 +7,8 @@ Código de estudiante: 8977586,
 
 """
 
+#Unificación de posición y caras en un solo número
+
 from sys import stdin
 from heapq import heappop, heappush
 
@@ -27,9 +29,9 @@ def f(k, C):
 def move(d, rc, R, C):
     #0 = north, 1 = east, 2 = south, 3 = west
     dire = ((-1, 0), (0, 1), (1, 0), (0, -1))
-    
-    nrc = (rc[0] + dire[d][0], rc[1] + dire[d][1])
-    flag = nrc[0] >= 0 and nrc[0] < R and nrc[1] >= 0 and nrc[1] < C
+
+    rc += dire[0] * 10000 + dire[1] * 1000    
+    flag = rc > 9999 and rc < 10000 * R and  rc - (rc // (10 ** 4)) * 10000 < R * 10000 and nrc[1] >= 0 and nrc[1] < C
     return (flag, nrc)
 
 def move2(d, rc, R, C):
@@ -74,20 +76,20 @@ def checkGold(nrc, npos, g, gm, R, C):
     return (g, gm)
 
 def dijkstra(rc, gold, R, C, A, B):
-    #estado: ((row, col), (floor, north, east), g, goldMap)
+    #estado: (row * 10000 + col * 1000 + floor * 100 + north * 10 + east, g, goldMap)
     
-    act = (0, rc, (0, 1, 4), 0, gold)
-    vis = {(rc, (0, 1, 4), 0, gold): 0}
+    act = (0, rc, 0, gold)
+    vis = {(rc, 0, gold): 0}
     flag = False
     cost = 0
     q = []
     heappush(q, act)
 
     while not flag and len(q) != 0:
-      c, rc, pos, g, gm = heappop(q)
+      c, rc, g, gm = heappop(q)
       i = 0
       
-      while not flag and i < 4 and vis[(rc, pos, g, gm)] == c:
+      while not flag and i < 4 and vis[(rc, g, gm)] == c:
         nflag, nrc = move(i, rc, R, C)
         ac = A
             
@@ -116,10 +118,10 @@ def main():
     T = int(stdin.readline())
     for i in range(T):
         R, C, A, B = list(map(int, stdin.readline().split()))
+        flag = False
         gold = 0
         gCount = 0
-        rc = (-1, -1)
-        flag = False
+        rc = 14
         
         for j in range(R):
             aux = stdin.readline()
@@ -129,8 +131,8 @@ def main():
                     gold = swap(gold, fn(j, k, C), R * C - 1)
                     gCount += 1
                 elif aux[k] == 'S':
-                    rc = (j, k)
-                flag = gCount == 6 and rc != (-1, -1)
+                    rc += j * 10000 +  k * 1000
+                flag = gCount == 6 and rc != 14
                 k += 1
 
         flag, cost = dijkstra(rc, gold, R, C, A, B)
