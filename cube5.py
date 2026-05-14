@@ -14,10 +14,6 @@ def verBit(n, pos, bits):
     return bool(n & (1 << bits - pos))
 
 def swap(n, pos, bits):
-    print(n, pos, bits)
-    print(bin(n))
-    print(bin(1 << bits - pos))
-    print(bin(n ^ (1 << bits - pos)))
     return n ^ (1 << bits - pos)
 
 def fn(r, c, C):
@@ -110,7 +106,7 @@ def dijkstra(rc, gold, R, C, A, B):
                     flag = True
                 else:
                     vis[ns] = cost
-                    heappush(q, ns)  
+                    heappush(q, (cost, nrc, npos, ng, ngm))  
         i += 1
         
     return (flag, cost)
@@ -130,13 +126,13 @@ def main():
             k = 0
             while not flag and k < C:
                 if aux[k] == 'G':
-                    gold = swap(gold, fn(j, k, C), C - 1)
+                    gold = swap(gold, fn(j, k, C), R * C - 1)
                     gCount += 1
                 elif aux[k] == 'S':
                     rc = (j, k)
                 flag = gCount == 6 and rc != (-1, -1)
                 k += 1
-        print("uwu")
+
         flag, cost = dijkstra(rc, gold, R, C, A, B)
         
         if flag:
