@@ -7,6 +7,8 @@ Código de estudiante: 8977586,
 
 """
 
+#implementación con una tupla de mascaras de bits para el mapa completo
+
 from sys import stdin
 from heapq import heappop, heappush
 

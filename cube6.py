@@ -16,16 +16,13 @@ def verBit(n, pos, bits):
 def swap(n, pos, bits):
     return n ^ (1 << bits - pos)
 
-5
-7
-
-def fn(r, c, R, C):
+def fn(r, c, C):
     return r * C + c
 
-def f(k, R, C):
+def f(k, C):
     r = floor(k/C)
-    c = k - r * R
-    return (i, j)
+    c = k - r * C
+    return (r, c)
 
 def move(d, rc, R, C):
     #0 = north, 1 = east, 2 = south, 3 = west
@@ -64,24 +61,23 @@ def roll(d, nrc, pos):
         npos = (op[pos[2]], pos[1], pos[0])
     return npos
 
-def checkGold(nrc, npos, g, gm, C):
-    if verBit(gm[nrc[0]], nrc[1], C)
-        if not verBit(g, npos[0]):
-            g = swap(g, npos[0], bits)
-            gm = gm.copy()
-            gm[nrc[0]] = swap(gm[nrc[0]], nrc[1], C)
+def checkGold(nrc, npos, g, gm, R, C):
+    flag = verBit(g, npos[0], 5)
+    if verBit(gm, fn(nrc[0], nrc[1], C), R * C - 1):
+        if not flag:
+            g = swap(g, npos[0], 5)
+            gm = swap(gm, fn(nrc[0], nrc[1], C), R * C - 1)
     else:
-        if verBit(g, npos[0]):
-            g = swap(g, npos[0], bits)
-            gm = gm.copy()
-            gm[nrc[0]] = swap(gm[nrc[0]], nrc[1], C)
+        if flag:
+            g = swap(g, npos[0], 5)
+            gm = swap(gm, fn(nrc[0], nrc[1], C), R * C - 1)
     return (g, gm)
 
 def dijkstra(rc, gold, R, C, A, B):
     #estado: ((row, col), (floor, north, east), g, goldMap)
     
     act = (0, rc, (0, 1, 4), 0, gold)
-    vis = {(rc, (0, 1, 4), 0, tuple(gold)): 0}
+    vis = {(rc, (0, 1, 4), 0, gold): 0}
     flag = False
     cost = 0
     q = []
@@ -91,17 +87,16 @@ def dijkstra(rc, gold, R, C, A, B):
       c, rc, pos, g, gm = heappop(q)
       i = 0
       
-      while not flag and i < 4 and vis[(rc, pos, g, tuple(gm))] == c:
+      while not flag and i < 4 and vis[(rc, pos, g, gm)] == c:
         nflag, nrc = move(i, rc, R, C)
         ac = A
             
         if nflag:
             npos = roll(i, nrc, pos)
-            ng, ngm = checkGold(nrc, npos, g, gm)
-            fngm = tuple(ngm)
+            ng, ngm = checkGold(nrc, npos, g, gm, R, C)
             if ng > g:
                 ac = B
-            ns = (nrc, npos, ng, fngm)
+            ns = (nrc, npos, ng, ngm)
             cost = c + ac
             
             if ns not in vis or vis[ns] > cost:
@@ -131,7 +126,7 @@ def main():
             k = 0
             while not flag and k < C:
                 if aux[k] == 'G':
-                    gold[R] = swap(gold[R], k, C)
+                    gold = swap(gold, fn(j, k, C), R * C - 1)
                     gCount += 1
                 elif aux[k] == 'S':
                     rc = (j, k)

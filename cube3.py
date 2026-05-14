@@ -7,6 +7,8 @@ Código de estudiante: 8977586,
 
 """
 
+#Implementación con sets con las posiciones del oro
+
 from sys import stdin
 from heapq import heappop, heappush
 
