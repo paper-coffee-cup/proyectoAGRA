@@ -1,12 +1,11 @@
 /*
-Tarea 1
-A - Problem A
+Proyecto final
 
 Nombre: Isabel Sofía Adrada Arboleda, Juan Luis Guevara Bustamante
 Código de estudiante: 8977586,
 */
 
-#include <iostream>
+#include<cstdio>
 #include <vector>
 #include <queue>
 #include <unordered_map>
@@ -211,18 +210,18 @@ int main() {
   int T, R, C, A, B, gCount;
   unsigned long long rc, gold = 0;
   bool flag = false;
-  string aux;
-  
-  cin >> T;
+
+  scanf("%d", &T);
   for (int i = 0; i < T; ++i) {
-    cin >> R >> C >> A >> B;        
+    scanf("%d %d %d %d", &R, &C, &A, &B);
+    char aux[C + 1];
     gold = 0;
     gCount = 0;
     rc = -1;
     flag = false;
             
-    for (int j = 0; j < R; j++) {
-      cin >> aux;
+    for (int j = 0; j < R; ++j) {
+      scanf("%s", aux);
       for (int k = 0; !flag && k < C; ++k) {
 	if (aux[k] == 'G') {
 	  gold = swap(gold, fn(j, k, C), R * C - 1);
@@ -236,9 +235,9 @@ int main() {
     pair<bool, unsigned long long> res = dijkstra(rc, gold, R, C, A, B);
             
     if (res.first)
-      cout << "Screw you guys, I got all the gold for " << res.second << " cost!" << endl;
+      printf("Screw you guys, I got all the gold for %lld cost!\n", res.second);
     else
-      cout << "Oh my God, they killed Kenny!" << endl;
+      printf("Oh my God, they killed Kenny!\n");
   } 
   return 0;
 }
