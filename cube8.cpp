@@ -161,8 +161,7 @@ pair<bool, long long> dijkstra(pair<long long, long long> rc, unsigned long long
 }
 
 int main() {
-    int T;
-    int ans_main = 0;
+  int T, ans_main = 0;
     if (cin >> T) {
         for (int i = 0; i < T; i++) {
             long long R, C, A, B;
