@@ -68,37 +68,33 @@ namespace std {
 }
 
 bool verBit(unsigned long long n, int pos, int bits) {
-    bool ans = (n & (1 << (bits - pos))) != 0;
-    return ans;
+  return  (n & (1 << (bits - pos))) != 0;
 }
 
 unsigned long long swap(unsigned long long n, int pos, int bits) {
-    unsigned long long ans = n ^ (1 << (bits - pos));
-    return ans;
+  return  n ^ (1 << (bits - pos));
 }
 
 unsigned long long assign(unsigned long long n, bool flag, int pos, int bits) {
-    unsigned long long ans;
-    if (flag)
-        ans = n | (1 << (bits - pos));
-    else
-        ans = n & ~(1 << (bits - pos));
-    return ans;
+  unsigned long long ans;
+  if (flag)
+    ans = n | (1 << (bits - pos));
+  else
+    ans = n & ~(1 << (bits - pos));
+  return ans;
 }
 
 unsigned long long fn(unsigned long long r, unsigned long long c, int C) {
-    unsigned long long ans = r * C + c;
-    return ans;
+  return r * C + c;
 }
 
 pair<unsigned long long, unsigned long long> f(unsigned long long k, int C) {
-    unsigned long long r = k / C;
-    unsigned long long c = k - r * C;
-    pair<unsigned long long, unsigned long long> ans = make_pair(r, c);
-    return ans;
+  unsigned long long r = k / C;
+  unsigned long long c = k - r * C;
+  return make_pair(r, c);
 }
 
- pair<bool, pair<unsigned long long,  unsigned long long>> move(int d, unsigned long long rc, int R, int C) {
+pair<bool, pair<unsigned long long,  unsigned long long>> move(int d, unsigned long long rc, int R, int C) {
   //0 = north, 1 = east, 2 = south, 3 = west
   int dire[4][2] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
   
@@ -126,26 +122,26 @@ unsigned long long roll(int d, unsigned long long c) {
   return ans;
 }
 
- pair<bool, pair< unsigned long long, unsigned long long>> checkGold(unsigned long long nr, unsigned long long nC,
-								     unsigned long long c, unsigned long long gm, int R, int C) {
-   //0 = cara de abajo
+pair<bool, pair< unsigned long long, unsigned long long>> checkGold(unsigned long long nr, unsigned long long nC,
+								    unsigned long long c, unsigned long long gm, int R, int C) {
+  //0 = cara de abajo
    
-   bool ans = false, flag = verBit(c, 0, 5);
+  bool ans = false, flag = verBit(c, 0, 5);
    
-   if (verBit(gm, fn(nr, nC, C), R * C - 1)) {
-     if (!flag) {
-       c = swap(c, 0, 5);
-       gm = swap(gm, fn(nr, nC, C), R * C - 1);
-       ans = true;
-     }
-   } else {
-     if (flag) {
-       c = swap(c, 0, 5);
-       gm = swap(gm, fn(nr, nC, C), R * C - 1);
-     }
-   }
-   return make_pair(ans, make_pair(c, gm));
- }
+  if (verBit(gm, fn(nr, nC, C), R * C - 1)) {
+    if (!flag) {
+      c = swap(c, 0, 5);
+      gm = swap(gm, fn(nr, nC, C), R * C - 1);
+      ans = true;
+    }
+  } else {
+    if (flag) {
+      c = swap(c, 0, 5);
+      gm = swap(gm, fn(nr, nC, C), R * C - 1);
+    }
+  }
+  return make_pair(ans, make_pair(c, gm));
+}
 
 
 
@@ -153,6 +149,7 @@ pair<bool, unsigned long long> dijkstra(unsigned long long rc, unsigned long lon
   //estado: (rowCol, cube, goldMap)
 
   priority_queue<vector<unsigned long long>, vector<vector<unsigned long long>>, greater<vector<unsigned long long>>> q;
+  pair<bool, pair<unsigned long long, unsigned long long>> pnrc, ncgm;
   unordered_map<State, unsigned long long> vis;
   vector<unsigned long long> nxt, act = {0, rc, 0, gold};
   unsigned long long co, c, gm, nrc, nc, ngm, nr, nC, cost = 0;
@@ -172,7 +169,7 @@ pair<bool, unsigned long long> dijkstra(unsigned long long rc, unsigned long lon
     q.pop();
                 
     for (int i = 0; !flag && i < 4 && vis[State(rc, c, gm)] == co; ++i) {
-      pair<bool, pair<unsigned long long,  unsigned long long>> pnrc = move(i, rc, R, C);
+      pnrc = move(i, rc, R, C);
       nr = (pnrc.second).first;
       nC = (pnrc.second).second;
       nrc = fn(nr, nC, C);
@@ -180,7 +177,7 @@ pair<bool, unsigned long long> dijkstra(unsigned long long rc, unsigned long lon
                   
       if (pnrc.first) {
         nc = roll(i, c);
-	pair<bool, pair< unsigned long long,  unsigned long long>> ncgm = checkGold(nr, nC, nc, gm, R, C);
+	ncgm = checkGold(nr, nC, nc, gm, R, C);
 	nc = (ncgm.second).first;
 	ngm = (ncgm.second).second;
 	                
