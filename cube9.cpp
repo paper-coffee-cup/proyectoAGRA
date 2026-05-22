@@ -122,7 +122,7 @@ unsigned long long roll(int d, unsigned long long c) {
   
   for (int i = 0; i < 4; ++i) {
     pos = move[i][m];
-    ans = assign(ans, verBit(ans, G[pos][d], 5), pos, 5);
+    ans = assign(ans, verBit(c, G[pos][d], 5), pos, 5);
   }
   return ans;
 }
