@@ -47,12 +47,13 @@ def roll(d, c):
     #0 = vertical, 1 = horizontal
     move = ((0, 0), (1, 2), (2, 4), (3, 5))
 
+    nc = c
     m = d % 2
     for i in move:
         pos = i[m]
-        c = assign(c, verBit(c, pos, 5), pos, 5)
+        nc = assign(nc, verBit(c, G[pos][d], 5), pos, 5)
 
-    return c
+    return nc
 
 def checkGold(nrc, c, gm, R, C):
     #0 = cara de abajo
@@ -83,13 +84,12 @@ def dijkstra(rc, gold, R, C, A, B):
       co, rc, c, gm = heappop(q)
       i = 0
       while not flag and i < 4 and vis[(rc, c, gm)] == co:
-        print(co, rc, c, gm)
         nflag, nrc = move(i, rc, R, C)
         ac = A
             
         if nflag:
             nc = roll(i, c)
-            gflag, nc, ngm = checkGold(nrc, c, gm, R, C)
+            gflag, nc, ngm = checkGold(nrc, nc, gm, R, C)
             if gflag:
                 ac = B
             ns = (nrc, nc, ngm)
