@@ -171,20 +171,20 @@ int roll(int d, int c) {
   return ans;
 }
 
-pair<bool, pair<int, unsigned long long>> checkGold(int nr, int nC, int c, unsigned long long gm, int R, int C) {
+pair<bool, pair<int, unsigned long long>> checkGold(int nrc, int c, unsigned long long gm, int sz) {
   //0 = cara de abajo
   bool ans = false, flag = verBit2(c, 0, 5);
-   
-  if (verBit(gm, fn(nr, nC, C), R * C - 1)) {
+  
+  if (verBit(gm, nrc, sz)) {
     if (!flag) {
       c = swap2(c, 0, 5);
-      gm = swap(gm, fn(nr, nC, C), R * C - 1);
+      gm = swap(gm, nrc, sz);
       ans = true;
     }
   } else {
     if (flag) {
       c = swap2(c, 0, 5);
-      gm = swap(gm, fn(nr, nC, C), R * C - 1);
+      gm = swap(gm, nrc, sz);
     }
   }
   return make_pair(ans, make_pair(c, gm));
@@ -192,14 +192,15 @@ pair<bool, pair<int, unsigned long long>> checkGold(int nr, int nC, int c, unsig
 
 pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, int C, int A, int B) {
   //estado: (rowCol, cube, goldMap)
+  
   priority_queue<qState, vector<qState>, greater<qState>> q;
   pair<bool, pair<int, unsigned long long>> ncgm;
   pair<bool, pair<int, int>> pnrc;
-  int co, c, nrc, nr, nc, nC, cost, ac;
+  int co, c, nrc, nr, nc, nC, cost, ac, sz = R * C - 1;
   unsigned long long gm, ngm;
   unordered_map<State, int> vis;
   bool flag = false;
-  qState nxt, act;
+  qState act;
   State ns;
 
   vis[State(rc, 0, gold)] = 0;
@@ -216,7 +217,6 @@ pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, 
     if (c == 63) {
       //63 = 111111
       flag = true;
-      cost = co;
       
     } else if (vis[State(rc, c, gm)] == co){
       for (int i = 0; i < 4; ++i) {
@@ -228,7 +228,7 @@ pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, 
                   
 	if (pnrc.first) {
 	  nc = roll(i, c);
-	  ncgm = checkGold(nr, nC, nc, gm, R, C);
+	  ncgm = checkGold(nrc, nc, gm, sz);
 	  nc = (ncgm.second).first;
 	  ngm = (ncgm.second).second;
 	                
@@ -245,11 +245,12 @@ pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, 
       }
     }
   }
-  return make_pair(flag, cost);
+  return make_pair(flag, co);
 }
 
 int main() {
   int T, R, C, A, B, rc, gCount;
+  pair<bool, unsigned long long> res;
   unsigned long long gold = 0;
   bool flag = false;
   char aux[9];
@@ -274,7 +275,7 @@ int main() {
       }
     }
             
-    pair<bool, unsigned long long> res = dijkstra(rc, gold, R, C, A, B);
+    res = dijkstra(rc, gold, R, C, A, B);
             
     if (res.first)
       printf("Screw you guys, I got all the gold for %lld cost!\n", res.second);
