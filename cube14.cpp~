@@ -51,50 +51,17 @@ public:
     return gm;
   };
 
+  bool operator <(const State &oth) const {
+    return false;
+   };
+
+   bool operator >(const State &oth) const {
+    return false;
+   };
+
   bool operator == (const State &oth) const {
     return rc == oth.rc && cube == oth.cube && gm == oth.gm;
   };
-};
-
-class qState {
-  // (cost, rowCol, cube, goldMap)
-
-private:
-  int cost;
-  int rc;
-  int cube;
-  unsigned long long gm;
-
-public:
-  qState() {
-  };
-  
-  qState(int co, int n, int c, unsigned long long m) {
-    cost = co;
-    rc = n;
-    cube = c;
-    gm = m;
-  };
-
-  int getCost() const {
-    return cost;
-  }
-
-  int getRc() const {
-    return rc;
-  };
-
-  int getCube() const {
-    return cube;
-  };
-
-  unsigned long long getGm() const {
-    return gm;
-  };
-
-  bool operator >(const qState &oth) const {
-    return cost > oth.cost;
-  }
 };
 
 namespace std {
@@ -193,32 +160,32 @@ inline pair<bool, pair<int, unsigned long long>> checkGold(int nrc, int c, unsig
 pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, int C, int A, int B) {
   //estado: (rowCol, cube, goldMap)
   
-  priority_queue<qState, vector<qState>, greater<qState>> q;
+  priority_queue<pair<int, State>, vector<pair<int, State>>, greater<pair<int, State>>> q;
   pair<bool, pair<int, unsigned long long>> ncgm;
   pair<bool, pair<int, int>> pnrc;
   int co, c, nrc, nr, nc, nC, cost, ac, sz = R * C - 1;
   unsigned long long gm, ngm;
   unordered_map<State, int> vis;
   bool flag = false;
-  qState act;
-  State ns;
+  pair<int, State> act;
+  State ns = State(rc, 0, gold);
 
-  vis[State(rc, 0, gold)] = 0;
-  q.push(qState(0, rc, 0, gold));
+  vis[ns] = 0;
+  q.push(make_pair(0, ns));
     
   while (!flag && !q.empty()) {
     act = q.top();
-    co = act.getCost();
-    rc = act.getRc();
-    c = act.getCube();
-    gm = act.getGm();
+    co = act.first;
+    rc = (act.second).getRc();
+    c = (act.second).getCube();
+    gm = (act.second).getGm();
     q.pop();
 
     if (c == 63) {
       //63 = 111111
       flag = true;
       
-    } else if (vis[State(rc, c, gm)] == co){
+    } else if (vis[act.second] == co){
       for (int i = 0; i < 4; ++i) {
 	pnrc = move(i, rc, R, C);
 	nr = (pnrc.second).first;
@@ -239,7 +206,7 @@ pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, 
 
 	  if (vis.find(ns) == vis.end() || vis[ns] > cost) {
 	    vis[ns] = cost;
-	    q.push(qState(cost, nrc, nc, ngm));
+	    q.push(make_pair(cost, ns));
 	  }
 	}
       }

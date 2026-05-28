@@ -7,6 +7,7 @@ Código de estudiante: 8977586,
 
 #include<cstdio>
 #include <vector>
+#include<set>
 #include <queue>
 #include <unordered_map>
 
@@ -25,6 +26,7 @@ class State {
   //estado: (rowCol, cube, goldMap)
   
 private:
+  int cost;
   int rc;
   int cube;
   unsigned long long gm;  
@@ -33,43 +35,7 @@ public:
   State() {
   };
   
-  State(int n, int c, unsigned long long m) {
-    rc = n;
-    cube = c;
-    gm = m;
-  };
-
-  int getRc() const {
-    return rc;
-  };
-
-  int getCube() const {
-    return cube;
-  };
-
-  unsigned long long getGm() const {
-    return gm;
-  };
-
-  bool operator == (const State &oth) const {
-    return rc == oth.rc && cube == oth.cube && gm == oth.gm;
-  };
-};
-
-class qState {
-  // (cost, rowCol, cube, goldMap)
-
-private:
-  int cost;
-  int rc;
-  int cube;
-  unsigned long long gm;
-
-public:
-  qState() {
-  };
-  
-  qState(int co, int n, int c, unsigned long long m) {
+  State(int co, int n, int c, unsigned long long m) {
     cost = co;
     rc = n;
     cube = c;
@@ -92,30 +58,20 @@ public:
     return gm;
   };
 
-  bool operator >(const qState &oth) const {
-    return cost > oth.cost;
-  }
-};
-
-namespace std {
-  template <>
-  class hash<State> {
-  public:
-    size_t operator()(const State &s) const {
-      //Obtener el hash de cada componente
-      size_t h1 = hash<int>{}(s.getRc());
-      size_t h2 = hash<int>{}(s.getCube());
-      size_t h3 = hash<unsigned long long>{}(s.getGm());
-
-      //Combinar los tres hashes consecutivamente (Algoritmo de Boost)
-      size_t ans = h1;
-      ans ^= h2 + 0x9e3779b9 + (ans << 6) + (ans >> 2);
-      ans ^= h3 + 0x9e3779b9 + (ans << 6) + (ans >> 2);
-
-      return ans;
+  bool operator <(const State &oth) const {
+    bool ans;
+    if (cost != oth.cost) {
+      ans = cost < oth.cost;
+    } else if (rc != oth.rc) {
+      ans = rc < oth.rc;
+    } else if (cube != oth.cube) {
+      ans = cube < oth.cube;
+    } else {
+      ans = gm < oth.gm;
     }
-  };
-}
+    return ans;
+   };
+};
 
 inline bool verBit(unsigned long long n, int pos, int bits) {
   return n & (1 << (bits - pos));
@@ -190,35 +146,61 @@ inline pair<bool, pair<int, unsigned long long>> checkGold(int nrc, int c, unsig
   return make_pair(ans, make_pair(c, gm));
 }
 
+const int TAMANIO = 64;
+using MapaElementos = std::unordered_map<unsigned long long, int>;
+
+void imprimirMatrizDeMapas(const MapaElementos matriz[TAMANIO][TAMANIO]) {
+  for (int i = 0; i < TAMANIO; ++i) {
+    for (int j = 0; j < TAMANIO; ++j) {
+      printf("[%d][%d]: { ", i, j);
+            
+      // Declaración explícita del iterador constante
+      MapaElementos::const_iterator it;
+            
+      // Recorrido clásico del mapa usando iteradores
+      for (it = matriz[i][j].begin(); it != matriz[i][j].end(); ++it) {
+	// Al usar iteradores se accede con el operador flecha (->)
+	printf("%llu -> %d, ", it->first, it->second);
+      }
+            
+      printf("}  ");
+    }
+    printf("\n");
+  }
+}
+
 pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, int C, int A, int B) {
   //estado: (rowCol, cube, goldMap)
-  
-  priority_queue<qState, vector<qState>, greater<qState>> q;
+ 
+  unordered_map<unsigned long long, int> vis[64][64];
+  unordered_map<unsigned long long, int> elm;
+  unordered_map<unsigned long long, int>::iterator it2;
   pair<bool, pair<int, unsigned long long>> ncgm;
   pair<bool, pair<int, int>> pnrc;
   int co, c, nrc, nr, nc, nC, cost, ac, sz = R * C - 1;
   unsigned long long gm, ngm;
-  unordered_map<State, int> vis;
+  set<State> q;
+  set<State>::iterator it;
   bool flag = false;
-  qState act;
-  State ns;
+  State act, ns = State(0, rc, 0, gold);
 
-  vis[State(rc, 0, gold)] = 0;
-  q.push(qState(0, rc, 0, gold));
+  vis[rc][0][gold] = 0;
+  q.insert(ns);
     
   while (!flag && !q.empty()) {
-    act = q.top();
+    it = q.begin();
+    act = (*it);
     co = act.getCost();
     rc = act.getRc();
     c = act.getCube();
     gm = act.getGm();
-    q.pop();
-
+    q.erase(it);
+      
     if (c == 63) {
       //63 = 111111
       flag = true;
       
-    } else if (vis[State(rc, c, gm)] == co){
+    } else if (vis[rc][c][gm] == co){
       for (int i = 0; i < 4; ++i) {
 	pnrc = move(i, rc, R, C);
 	nr = (pnrc.second).first;
@@ -233,13 +215,16 @@ pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, 
 	  ngm = (ncgm.second).second;
 	                
 	  if (ncgm.first)
-	    ac = B;   
-	  ns = State(nrc, nc, ngm);
+	    ac = B;
 	  cost = co + ac;
+	  ns = State(cost, nrc, nc, ngm);
+	  it2 = vis[nrc][nc].find(ngm);
 
-	  if (vis.find(ns) == vis.end() || vis[ns] > cost) {
-	    vis[ns] = cost;
-	    q.push(qState(cost, nrc, nc, ngm));
+	  if (it2 == vis[nrc][nc].end() || vis[nrc][nc][ngm] > cost) {
+	    if (it2 != vis[nrc][nc].end())
+	      q.erase(State(elm[ngm], nrc, nc, ngm));
+	    vis[nrc][nc][ngm] = cost;
+ 	    q.insert(ns);
 	  }
 	}
       }
