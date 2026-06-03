@@ -161,13 +161,7 @@ inline pair<bool, pair<int, int>> checkGold(unordered_map<unsigned long long, in
 pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, int C, int A, int B) {
   //estado: (rowCol, cube, goldMap)
 
-  int vSize;
-  if (R <= 4 && C <= 4)
-    vSize = visSize[R - 1][C - 1];
-  else
-    vSize = 100 * R * C;
-  
-  vector<vector<vector<int>>> vis(64, vector<vector<int>>(64, vector<int>(vSize, -1)));
+  vector<vector<unordered_map<int, int>>> vis(64, vector<unordered_map<int, int>>(64));  
   priority_queue<pair<int, State>, vector<pair<int, State>>, greater<pair<int, State>>> q;
   unordered_map<unsigned long long, int> id;
   vector<unsigned long long> maps;
@@ -175,7 +169,7 @@ pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, 
   pair<bool, pair<int, unsigned long long>> ncgm;
   pair<bool, pair<int, int>> pnrc;
   
-  int co, c, nrc, nr, nc, nC, cost, ac, isVis, sz = R * C - 1, sz2 = R * R * C * C;
+  int co, c, nrc, nr, nc, nC, cost, ac, sz = R * C - 1;
   unsigned long long gm, ngm;
 
   pair<int, State> act;
@@ -218,14 +212,9 @@ pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, 
 	  
 	  if (ncgm.first)
 	    ac = B;
-
-	  if (ngm >= vis[nrc][nc].size())
-	    vis[nrc][nc].resize(ngm + sz2, -1);
-
 	  cost = co + ac;
-	  isVis = vis[nrc][nc][ngm];
 	 
-	  if (isVis == -1 || isVis > cost) {
+	  if (vis[nrc][nc].find(ngm) == vis[nrc][nc].end() || vis[nrc][nc][ngm] > cost) {
 	    vis[nrc][nc][ngm] = cost;
 	    q.emplace(make_pair(cost, State(nrc, nc, ngm)));
 	  }

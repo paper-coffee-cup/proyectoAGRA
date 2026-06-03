@@ -22,7 +22,7 @@ int G[6][4] = {{3, 5, 1, 4}, {0, 1, 2, 1}, {1, 4, 3, 5}, {2, 3, 0, 3}, {4, 0, 4,
 int moves[4][2] = {{0, 0}, {1, 2}, {2, 4}, {3, 5}};
 
 // R * C
-int visSize[8][8] = {{2, 4, 8, 16, 32},
+int visSize[5][5] = {{2, 4, 8, 16, 32},
 		     {4, 16, 64, 247, 848},
 		     {8, 64, 466, 2510, 9949},
 		     {16, 247, 2510, 14893, 60460},
@@ -221,7 +221,7 @@ pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, 
 	    ac = B;
 
 	  if (ngm >= vis[nrc][nc].size())
-	    vis[nrc][nc].resize(ngm + 100, -1);
+	    vis[nrc][nc].resize(ngm + sz, -1);
 
 	  cost = co + ac;
 	  isVis = vis[nrc][nc][ngm];
