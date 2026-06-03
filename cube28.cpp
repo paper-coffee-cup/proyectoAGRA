@@ -18,8 +18,13 @@ int dire[4][2] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
 int fn[8][8];
 pair<int, int> f[64];
 int moves[64][4];
+int vis[64][64][20000];
 
-int vis[64][64][15000];
+// R * C
+int visSize[4][4] = {{2, 4, 8, 16},
+		     {4, 16, 64, 247},
+		     {8, 64, 466, 1510},
+		     {16, 247, 2510, 14893}};
 
 //i: {north, east, south, west}
 int roll[64][4] = {{0, 0, 0, 0}, {1, 32, 1, 8}, {2, 8, 2, 32}, {3, 40, 3, 40}, {32, 4, 8, 4}, {33, 36, 9, 12},
@@ -161,12 +166,23 @@ void precalc(int R, int C) {
   }
 }
 
-unsigned long long dijkstra(int rc, unsigned long long gold, int R, int C, int A, int B) {
-  //estado: (rowCol, cube, goldMap)
+void cleanVis(int R, int C, int l, int r) {
+  int lim;
+  if (l != 0)
+    lim = r;
+  else if (R <= 4 && C <= 4)
+    lim = visSize[R][C];
+  else
+    lim = 15000;
 
   for (int i = 0; i < R * C; ++i)
     for (int j = 0; j < 64; ++j)
-      for (int k = 0; k <)
+      for (int k = l; k < lim; ++i)
+	vis[i][j][k] = -1;
+}
+
+unsigned long long dijkstra(int rc, unsigned long long gold, int R, int C, int A, int B) {
+  //estado: (rowCol, cube, goldMap)
 
   priority_queue<State, vector<State>, greater<State>> q;
   pair<bool, pair<int, unsigned long long>> ncgm;
@@ -174,12 +190,13 @@ unsigned long long dijkstra(int rc, unsigned long long gold, int R, int C, int A
   unordered_map<unsigned long long, int> id;
   vector<unsigned long long> maps;  
 
-  int co, c, nrc, nc, cost, ac, sz = R * C - 1;
+  int co, c, nrc, nc, cost, ac, sz = R * C - 1, sz2, isVis;
   unsigned long long gm, ngm;
   
   bool flag = false;
   State act;
-  
+
+  cleanVis(R, C, 0, 0);
   q.emplace(State(0, rc, 0, 0));
   maps.push_back(gold);
   id[gold] = 0;
@@ -211,8 +228,16 @@ unsigned long long dijkstra(int rc, unsigned long long gold, int R, int C, int A
 	  if (ncgm.first)
 	    ac = B;   
 	  cost = co + ac;
+	  
+	  /*
+	  sz2 = vis[nrc][nc].size();
 
-	  if (vis[nrc][nc].find(ngm) == vis[nrc][nc].end() || vis[nrc][nc][ngm] > cost) {
+	  if (ngm > sz2 - 1)
+	    cleanVis(R, C, sz2, sz2 + 1000);
+	  */
+	  isVis = vis[nrc][nc][ngm];
+
+	  if (isVis == -1 || isVis > cost) {
 	    vis[nrc][nc][ngm] = cost;
 	    q.emplace(State(cost, nrc, nc, ngm));
 	  }
