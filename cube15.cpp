@@ -12,7 +12,6 @@ Código de estudiante: 8977586,
 
 using namespace std;
 
-
 //0 = north, 1 = east, 2 = south, 3 = west
 int dire[4][2] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
 
@@ -130,7 +129,6 @@ inline pair<bool, pair<int, int>> checkGold(unordered_map<unsigned long long, in
   //0 = cara de abajo
 
   bool ans = false, flag = verBit2(c, 0, 5);
-  int ngm;
   
   if (verBit(gm, nrc, sz)) {
     if (!flag) {
@@ -155,7 +153,13 @@ inline pair<bool, pair<int, int>> checkGold(unordered_map<unsigned long long, in
 pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, int C, int A, int B) {
   //estado: (rowCol, cube, goldMap)
 
-  vector<vector<vector<int>>> vis(64, vector<vector<int>>(64, vector<int>(visSize[R - 1][C - 1], -1)));
+  int vSize;
+  if (R <= 4 && C <= 4)
+    vSize = visSize[R - 1][C - 1];
+  else
+    vSize = 20000;
+  
+  vector<vector<vector<int>>> vis(64, vector<vector<int>>(64, vector<int>(vSize, -1)));
   priority_queue<pair<int, State>, vector<pair<int, State>>, greater<pair<int, State>>> q;
   unordered_map<unsigned long long, int> id;
   vector<unsigned long long> maps;
@@ -169,11 +173,12 @@ pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, 
   pair<int, State> act;
   bool flag = false;
   State ns;
-
+  
   q.push(make_pair(0, State(rc, 0, 0)));
   maps.push_back(gold);
   id[gold] = 0;
   vis[rc][0][0] = 0;
+  
   
   while (!flag && !q.empty()) {
     act = q.top();
@@ -204,11 +209,14 @@ pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, 
 	  ngm = (ncgm.second).second;
 	  
 	  if (ncgm.first)
-	    ac = B;   
+	    ac = B;
+
+	  if (ngm >= vis[nrc][nc].size())
+	    vis[nrc][nc].resize(ngm + 100, -1);
 
 	  cost = co + ac;
 	  isVis = vis[nrc][nc][ngm];
-	  
+	 
 	  if (isVis == -1 || isVis > cost) {
 	    vis[nrc][nc][ngm] = cost;
 	    q.push(make_pair(cost, State(nrc, nc, ngm)));
@@ -246,7 +254,6 @@ int main() {
 	flag = gCount == 6 && rc != -1;
       }
     }
-            
     res = dijkstra(rc, gold, R, C, A, B);
             
     if (res.first)
@@ -256,3 +263,4 @@ int main() {
   } 
   return 0;
 }
+

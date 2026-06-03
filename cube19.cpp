@@ -21,19 +21,52 @@ int G[6][4] = {{3, 5, 1, 4}, {0, 1, 2, 1}, {1, 4, 3, 5}, {2, 3, 0, 3}, {4, 0, 4,
 //0 = vertical, 1 = horizontal
 int moves[4][2] = {{0, 0}, {1, 2}, {2, 4}, {3, 5}};
 
+// R * C
+int visSize[8][8] = {{2, 4, 8, 16, 32},
+		     {4, 16, 64, 247, 848},
+		     {8, 64, 466, 2510, 9949},
+		     {16, 247, 2510, 14893, 60460},
+		     {32, 848, 9949, 60460, 245506}};
+
+// cube: {north, east, south, west}
+unordered_map<int, vector<int>> roll = {{0, {0, 0, 0, 0}}, {1, {1, 32, 1, 8}}, {2, {2, 8, 2, 32}},
+					{3, {3, 40, 3, 40}}, {4, {32, 4, 8, 4}}, {5, {33, 36, 9, 12}},
+					{6, {34, 12, 10, 36}}, {7, {35, 44, 11, 44}}, {8, {4, 1, 16, 2}},
+					{9, {5, 33, 17, 10}}, {10, {6, 9, 18, 34}}, {11, {7, 41, 19, 42}},
+					{12, {36, 5, 24, 6}}, {13, {37, 37, 25, 14}}, {14, {38, 13, 26, 38}},
+					{15, {39, 45, 27, 46}}, {16, {8, 16, 32, 16}}, {17, {9, 48, 33, 24}},
+					{18, {10, 24, 34, 48}}, {19, {11, 56, 35, 56}}, {20, {40, 20, 40, 20}},
+					{21, {41, 52, 41, 28}}, {22, {42, 28, 42, 52}}, {23, {43, 60, 43, 60}},
+					{24, {12, 17, 48, 18}}, {25, {13, 49, 49, 26}}, {26, {14, 25, 50, 50}},
+					{27, {15, 57, 51, 58}}, {28, {44, 21, 56, 22}}, {29, {45, 53, 57, 30}},
+					{30, {46, 29, 58, 54}}, {31, {47, 61, 59, 62}}, {32, {16, 2, 4, 1}},
+					{33, {17, 34, 5, 9}}, {34, {18, 10, 6, 33}}, {35, {19, 42, 7, 41}},
+					{36, {48, 6, 12, 5}}, {37, {49, 38, 13, 13}}, {38, {50, 14, 14, 37}},
+					{39, {51, 46, 15, 45}}, {40, {20, 3, 20, 3}}, {41, {21, 35, 21, 11}},
+					{42, {22, 11, 22, 35}}, {43, {23, 43, 23, 43}}, {44, {52, 7, 28, 7}},
+					{45, {53, 39, 29, 15}}, {46, {54, 15, 30, 39}}, {47, {55, 47, 31, 47}},
+					{48, {24, 18, 36, 17}}, {49, {25, 50, 37, 25}}, {50, {26, 26, 38, 49}},
+					{51, {27, 58, 39, 57}}, {52, {56, 22, 44, 21}}, {53, {57, 54, 45, 29}},
+					{54, {58, 30, 46, 53}}, {55, {59, 62, 47, 61}}, {56, {28, 19, 52, 19}},
+					{57, {29, 51, 53, 27}}, {58, {30, 27, 54, 51}}, {59, {31, 59, 55, 59}},
+					{60, {60, 23, 60, 23}}, {61, {61, 55, 61, 31}}, {62, {62, 31, 62, 55}},
+					{63, {63, 63, 63, 63}}};
+
+
+
 class State {
   //estado: (rowCol, cube, goldMap)
   
 private:
   int rc;
   int cube;
-  unsigned long long gm;  
+  int gm;  
   
 public:
   State() {
   };
   
-  State(int n, int c, unsigned long long m) {
+  State(int n, int c, int m) {
     rc = n;
     cube = c;
     gm = m;
@@ -47,75 +80,15 @@ public:
     return cube;
   };
 
-  unsigned long long getGm() const {
+  int getGm() const {
     return gm;
   };
 
-  bool operator == (const State &oth) const {
-    return rc == oth.rc && cube == oth.cube && gm == oth.gm;
-  };
+  bool operator <(const State &oth) const {   
+    return false;
+   };
 };
 
-class qState {
-  // (cost, rowCol, cube, goldMap)
-
-private:
-  int cost;
-  int rc;
-  int cube;
-  unsigned long long gm;
-
-public:
-  qState() {
-  };
-  
-  qState(int co, int n, int c, unsigned long long m) {
-    cost = co;
-    rc = n;
-    cube = c;
-    gm = m;
-  };
-
-  int getCost() const {
-    return cost;
-  }
-
-  int getRc() const {
-    return rc;
-  };
-
-  int getCube() const {
-    return cube;
-  };
-
-  unsigned long long getGm() const {
-    return gm;
-  };
-
-  bool operator >(const qState &oth) const {
-    return cost > oth.cost;
-  }
-};
-
-namespace std {
-  template <>
-  class hash<State> {
-  public:
-    size_t operator()(const State &s) const {
-      //Obtener el hash de cada componente
-      size_t h1 = hash<int>{}(s.getRc());
-      size_t h2 = hash<int>{}(s.getCube());
-      size_t h3 = hash<unsigned long long>{}(s.getGm());
-
-      //Combinar los tres hashes consecutivamente (Algoritmo de Boost)
-      size_t ans = h1;
-      ans ^= h2 + 0x9e3779b9 + (ans << 6) + (ans >> 2);
-      ans ^= h3 + 0x9e3779b9 + (ans << 6) + (ans >> 2);
-
-      return ans;
-    }
-  };
-}
 
 inline bool verBit(unsigned long long n, int pos, int bits) {
   return n & (1 << (bits - pos));
@@ -130,22 +103,16 @@ inline bool verBit2(int n, int pos, int bits) {
   return n & (1 << (bits - pos));
 }
 
+
 inline int swap2(int n, int pos, int bits) {
   return  n ^ (1 << (bits - pos));
 }
 
-inline int assign(int n, bool flag, int pos, int bits) {
-  int ans;
-  if (flag)
-    ans = n | (1 << (bits - pos));
-  else
-    ans = n & ~(1 << (bits - pos));
-  return ans;
-}
 
 inline int fn(int r, int c, int C) {
   return r * C + c;
 }
+
 
 inline pair<int, int> f(int k, int C) {
   int r = k / C;
@@ -154,6 +121,8 @@ inline pair<int, int> f(int k, int C) {
 }
 
 inline pair<bool, pair<int, int>> move(int d, int rc, int R, int C) {
+  //d = direction, rc = rowCol
+  
   pair<int, int> prc = f(rc, C);
   int nr = prc.first + dire[d][0];
   int nc = prc.second + dire[d][1];
@@ -162,17 +131,12 @@ inline pair<bool, pair<int, int>> move(int d, int rc, int R, int C) {
   return ans;
 }
 
-inline int roll(int d, int c) {
-  int pos, m = d % 2, ans = c;
-  for (int i = 0; i < 4; ++i) {
-    pos = moves[i][m];
-    ans = assign(ans, verBit2(c, G[pos][d], 5), pos, 5);
-  }
-  return ans;
-}
 
-inline pair<bool, pair<int, unsigned long long>> checkGold(int nrc, int c, unsigned long long gm, int sz) {
+inline pair<bool, pair<int, int>> checkGold(unordered_map<unsigned long long, int> &id, vector<unsigned long long> &maps,
+					    int nrc, int c, unsigned long long gm, int sz) {
+  //nrc = rowCol, c = cube, gm = goldMap
   //0 = cara de abajo
+
   bool ans = false, flag = verBit2(c, 0, 5);
   
   if (verBit(gm, nrc, sz)) {
@@ -187,37 +151,59 @@ inline pair<bool, pair<int, unsigned long long>> checkGold(int nrc, int c, unsig
       gm = swap(gm, nrc, sz);
     }
   }
-  return make_pair(ans, make_pair(c, gm));
+  if (id.find(gm) == id.end()) {
+    maps.push_back(gm);
+    id[gm] = maps.size() - 1;
+  } 
+  return make_pair(ans, make_pair(c, id[gm]));
 }
 
+  
 pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, int C, int A, int B) {
   //estado: (rowCol, cube, goldMap)
+
+  int vSize;
+  if (R <= 4 && C <= 4)
+    vSize = visSize[R - 1][C - 1];
+  else
+    vSize = 20000;
   
-  priority_queue<qState, vector<qState>, greater<qState>> q;
+  vector<vector<vector<int>>> vis(64, vector<vector<int>>(64, vector<int>(vSize, -1)));
+  priority_queue<pair<int, State>, vector<pair<int, State>>, greater<pair<int, State>>> q;
+  unordered_map<unsigned long long, int> id;
+  vector<unsigned long long> maps;
+  
   pair<bool, pair<int, unsigned long long>> ncgm;
   pair<bool, pair<int, int>> pnrc;
-  int co, c, nrc, nr, nc, nC, cost, ac, sz = R * C - 1;
+  
+  int co, c, nrc, nr, nc, nC, cost, ac, isVis, sz = R * C - 1;
   unsigned long long gm, ngm;
-  unordered_map<State, int> vis;
-  bool flag = false;
-  qState act;
-  State ns;
 
-  vis[State(rc, 0, gold)] = 0;
-  q.push(qState(0, rc, 0, gold));
-    
+  pair<int, State> act;
+  bool flag = false;
+  State ns;
+  
+  q.push(make_pair(0, State(rc, 0, 0)));
+  maps.push_back(gold);
+  id[gold] = 0;
+  vis[rc][0][0] = 0;
+  
+  
   while (!flag && !q.empty()) {
     act = q.top();
-    co = act.getCost();
-    rc = act.getRc();
-    c = act.getCube();
-    gm = act.getGm();
+    co = act.first;
+    rc = (act.second).getRc();
+    c = (act.second).getCube();
+    gm = (act.second).getGm();
     q.pop();
+
+    //printf("%d %d %d %d\n", co, rc, c, gm);
     if (c == 63) {
       //63 = 111111
       flag = true;
+      //printf("%llu\n", maps[gm]);
       
-    } else if (vis[State(rc, c, gm)] == co){
+    } else if (vis[rc][c][gm] == co) {
       for (int i = 0; i < 4; ++i) {
 	pnrc = move(i, rc, R, C);
 	nr = (pnrc.second).first;
@@ -226,19 +212,23 @@ pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, 
 	ac = A;
                   
 	if (pnrc.first) {
-	  nc = roll(i, c);
-	  ncgm = checkGold(nrc, nc, gm, sz);
+	  nc = roll[c][i];
+	  ncgm = checkGold(id, maps, nrc, nc, maps[gm], sz);
 	  nc = (ncgm.second).first;
 	  ngm = (ncgm.second).second;
-	                
+	  
 	  if (ncgm.first)
-	    ac = B;   
-	  ns = State(nrc, nc, ngm);
-	  cost = co + ac;
+	    ac = B;
 
-	  if (vis.find(ns) == vis.end() || vis[ns] > cost) {
-	    vis[ns] = cost;
-	    q.push(qState(cost, nrc, nc, ngm));
+	  if (ngm >= vis[nrc][nc].size())
+	    vis[nrc][nc].resize(ngm + 100, -1);
+
+	  cost = co + ac;
+	  isVis = vis[nrc][nc][ngm];
+	 
+	  if (isVis == -1 || isVis > cost) {
+	    vis[nrc][nc][ngm] = cost;
+	    q.push(make_pair(cost, State(nrc, nc, ngm)));
 	  }
 	}
       }
@@ -273,7 +263,6 @@ int main() {
 	flag = gCount == 6 && rc != -1;
       }
     }
-            
     res = dijkstra(rc, gold, R, C, A, B);
             
     if (res.first)
@@ -283,4 +272,3 @@ int main() {
   } 
   return 0;
 }
-
