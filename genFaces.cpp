@@ -36,16 +36,16 @@ int roll(int d, int c) {
 int main() {
   int act, ans;
   for (int i = 0; i < 64; ++i) {
-    cout << '{' << i << ", {";
+    cout << '{';
     for (int j = 0; j < 3; ++j) {
       ans = roll(j, i);
       cout << ans << ", ";
     }
     ans = roll(3, i);
     if (i != 63)
-      cout << ans << "}}, ";
+      cout << ans << "}, ";
     else
-      cout << ans << "}}";
+      cout << ans << "}";
 	}
   return 0;
 }
