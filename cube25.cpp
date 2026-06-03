@@ -129,7 +129,33 @@ inline pair<bool, pair<int, unsigned long long>> checkGold(int nrc, int c, unsig
   return make_pair(ans, make_pair(c, gm));
 }
 
-pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, int C, int A, int B) {
+void precalc(int R, int C) {
+  pair<bool, pair<int, int>> moveAux;
+  pair<int, int> moveAuxF;
+  int fAux;
+  
+  for (int j = 0; j < R; ++j) {
+    for (int k = 0; k < C; ++k) {
+      fAux = genFn(j, k, C);
+      fn[j][k] = fAux;
+      f[fAux] = make_pair(j, k);
+    }
+  }
+
+  for (int j = 0; j < R * C; ++j) {
+    for (int k = 0; k < 4; ++k) {
+      moveAux = genMove(k, j, R, C);
+      moveAuxF = moveAux.second;
+	
+      if (moveAux.first)
+	moves[j][k] = fn[moveAuxF.first][moveAuxF.second];
+      else
+	moves[j][k] = -1;
+    }
+  }
+}
+
+unsigned long long dijkstra(int rc, unsigned long long gold, int R, int C, int A, int B) {
   //estado: (rowCol, cube, goldMap)
 
   vector<vector<unordered_map<unsigned long long, int>>> vis(R * C, vector<unordered_map<unsigned long long, int>>(64));
@@ -183,24 +209,16 @@ pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, 
       }
     }
   }
-  return make_pair(flag, co);
+  
+  if (!flag)
+    co = -1;
+  return co;
 }
 
-void printMatrix(int arr[64][4]) {
-    for (int i = 0; i < 64; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            printf("%d ", arr[i][j]);
-        }
-        printf("\n");
-    }
-}
 
 int main() {
-  int T, R, C, A, B, rc, gCount, fAux, lR = -1, lC = -1;
-  pair<bool, unsigned long long> res;
-  pair<bool, pair<int, int>> moveAux;
-  pair<int, int> moveAuxF;
-  unsigned long long gold = 0;
+  int T, R, C, A, B, rc, gCount, lR = -1, lC = -1;
+  unsigned long long res, gold = 0;
   bool flag = false;
   char aux[9];
 
@@ -224,32 +242,15 @@ int main() {
       }
     }
 
-    if (lR != R || lC != C) {
-      for (int j = 0; j < R; ++j) {
-	for (int k = 0; k < C; ++k) {
-	  fAux = genFn(j, k, C);
-	  fn[j][k] = fAux;
-	  f[fAux] = make_pair(j, k);
-	}
-      }
-
-      for (int j = 0; j < R * C; ++j) {
-	for (int k = 0; k < 4; ++k) {
-	  moveAux = genMove(k, j, R, C);
-	  moveAuxF = moveAux.second;
-	
-	  if (moveAux.first)
-	    moves[j][k] = fn[moveAuxF.first][moveAuxF.second];
-	  else
-	    moves[j][k] = -1;
-	}
-      }
-    }
+    if (lR != R || lC != C)
+      precalc(R, C);
     
     res = dijkstra(rc, gold, R, C, A, B);
+    lR = R;
+    lC = C;
             
-    if (res.first)
-      printf("Screw you guys, I got all the gold for %lld cost!\n", res.second);
+    if (res != -1)
+      printf("Screw you guys, I got all the gold for %lld cost!\n", res);
     else
       printf("Oh my God, they killed Kenny!\n");
   } 
