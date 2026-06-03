@@ -2,7 +2,7 @@
 Proyecto final
 
 Nombre: Isabel Sofía Adrada Arboleda, Juan Luis Guevara Bustamante
-Código de estudiante: 8977586, 8976012
+Código de estudiante: 8977586,
 */
 
 #include<cstdio>
@@ -14,13 +14,6 @@ using namespace std;
 
 //0 = north, 1 = east, 2 = south, 3 = west
 int dire[4][2] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
-
-// R * C
-int visSize[8][8] = {{2, 4, 8, 16},
-		     {4, 16, 64, 247},
-		     {8, 64, 466, 1510},
-		     {16, 247, 2510, 14893}};
-
 
 // i: {north, east, south, west}
 vector<vector<int>> roll = {{0, 0, 0, 0}, {1, 32, 1, 8}, {2, 8, 2, 32}, {3, 40, 3, 40}, {32, 4, 8, 4},
@@ -37,21 +30,19 @@ vector<vector<int>> roll = {{0, 0, 0, 0}, {1, 32, 1, 8}, {2, 8, 2, 32}, {3, 40, 
 			    {59, 62, 47, 61}, {28, 19, 52, 19}, {29, 51, 53, 27}, {30, 27, 54, 51}, {31, 59, 55, 59},
 			    {60, 23, 60, 23}, {61, 55, 61, 31}, {62, 31, 62, 55}, {63, 63, 63, 63}};
 
-
-
 class State {
   //estado: (rowCol, cube, goldMap)
   
 private:
   int rc;
   int cube;
-  int gm;  
+  unsigned long long gm;  
   
 public:
   State() {
   };
   
-  State(int n, int c, int m) {
+  State(int n, int c, unsigned long long m) {
     rc = n;
     cube = c;
     gm = m;
@@ -65,15 +56,75 @@ public:
     return cube;
   };
 
-  int getGm() const {
+  unsigned long long getGm() const {
     return gm;
   };
 
-  bool operator <(const State &oth) const {   
-    return false;
-   };
+  bool operator == (const State &oth) const {
+    return rc == oth.rc && cube == oth.cube && gm == oth.gm;
+  };
 };
 
+class qState {
+  // (cost, rowCol, cube, goldMap)
+
+private:
+  int cost;
+  int rc;
+  int cube;
+  unsigned long long gm;
+
+public:
+  qState() {
+  };
+  
+  qState(int co, int n, int c, unsigned long long m) {
+    cost = co;
+    rc = n;
+    cube = c;
+    gm = m;
+  };
+
+  int getCost() const {
+    return cost;
+  }
+
+  int getRc() const {
+    return rc;
+  };
+
+  int getCube() const {
+    return cube;
+  };
+
+  unsigned long long getGm() const {
+    return gm;
+  };
+
+  bool operator >(const qState &oth) const {
+    return cost > oth.cost;
+  }
+};
+
+namespace std {
+  template <>
+  class hash<State> {
+  public:
+    size_t operator()(const State &s) const {
+      //Obtener el hash de cada componente
+      size_t h1 = hash<int>{}(s.getRc());
+      size_t h2 = hash<int>{}(s.getCube());
+      size_t h3 = hash<unsigned long long>{}(s.getGm());
+
+      //Combinar los tres hashes consecutivamente (Algoritmo de Boost)
+      size_t ans = h1;
+      ans ^= h2 + 0x9e3779b9 + (ans << 6) + (ans >> 2);
+      ans ^= h3 + 0x9e3779b9 + (ans << 6) + (ans >> 2);
+
+      return ans;
+    }
+  };
+}
 
 inline bool verBit(unsigned long long n, int pos, int bits) {
   return n & (1 << (bits - pos));
@@ -88,16 +139,13 @@ inline bool verBit2(int n, int pos, int bits) {
   return n & (1 << (bits - pos));
 }
 
-
 inline int swap2(int n, int pos, int bits) {
   return  n ^ (1 << (bits - pos));
 }
 
-
 inline int fn(int r, int c, int C) {
   return r * C + c;
 }
-
 
 inline pair<int, int> f(int k, int C) {
   int r = k / C;
@@ -105,9 +153,7 @@ inline pair<int, int> f(int k, int C) {
   return make_pair(r, c);
 }
 
-inline pair<bool, pair<int, int>> makeMoves(int d, int rc, int R, int C) {
-  //d = direction, rc = rowCol
-  
+inline pair<bool, pair<int, int>> move(int d, int rc, int R, int C) {
   pair<int, int> prc = f(rc, C);
   int nr = prc.first + dire[d][0];
   int nc = prc.second + dire[d][1];
@@ -116,12 +162,8 @@ inline pair<bool, pair<int, int>> makeMoves(int d, int rc, int R, int C) {
   return ans;
 }
 
-
-inline pair<bool, pair<int, int>> checkGold(unordered_map<unsigned long long, int> &id, vector<unsigned long long> &maps,
-					    int nrc, int c, unsigned long long gm, int sz) {
-  //nrc = rowCol, c = cube, gm = goldMap
+inline pair<bool, pair<int, unsigned long long>> checkGold(int nrc, int c, unsigned long long gm, int sz) {
   //0 = cara de abajo
-
   bool ans = false, flag = verBit2(c, 0, 5);
   
   if (verBit(gm, nrc, sz)) {
@@ -136,57 +178,37 @@ inline pair<bool, pair<int, int>> checkGold(unordered_map<unsigned long long, in
       gm = swap(gm, nrc, sz);
     }
   }
-  if (id.find(gm) == id.end()) {
-    maps.push_back(gm);
-    id[gm] = maps.size() - 1;
-  } 
-  return make_pair(ans, make_pair(c, id[gm]));
+  return make_pair(ans, make_pair(c, gm));
 }
 
-  
 pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, int C, int A, int B) {
   //estado: (rowCol, cube, goldMap)
-
-  int vSize;
-  if (R <= 4 && C <= 4)
-    vSize = visSize[R - 1][C - 1];
-  else
-    vSize = 1000 * R * C;
   
-  vector<vector<vector<int>>> vis(R * C, vector<vector<int>>(64, vector<int>(vSize, -1)));
-  priority_queue<pair<int, State>, vector<pair<int, State>>, greater<pair<int, State>>> q;
-  unordered_map<unsigned long long, int> id;
-  vector<unsigned long long> maps;
-  
+  priority_queue<qState, vector<qState>, greater<qState>> q;
   pair<bool, pair<int, unsigned long long>> ncgm;
   pair<bool, pair<int, int>> pnrc;
-  
-  int co, c, nrc, nr, nc, nC, cost, ac, isVis, sz = R * C - 1, sz2 = R * R * C * C;
+  int co, c, nrc, nr, nc, nC, cost, ac, sz = R * C - 1;
   unsigned long long gm, ngm;
-
-  pair<int, State> act;
+  unordered_map<State, int> vis;
   bool flag = false;
+  qState act;
   State ns;
-  
-  q.emplace(make_pair(0, State(rc, 0, 0)));
-  maps.push_back(gold);
-  id[gold] = 0;
-  vis[rc][0][0] = 0;
-  
-  
+
+  vis[State(rc, 0, gold)] = 0;
+  q.push(qState(0, rc, 0, gold));
+    
   while (!flag && !q.empty()) {
     act = q.top();
-    co = act.first;
-    rc = (act.second).getRc();
-    c = (act.second).getCube();
-    gm = (act.second).getGm();
+    co = act.getCost();
+    rc = act.getRc();
+    c = act.getCube();
+    gm = act.getGm();
     q.pop();
-
     if (c == 63) {
       //63 = 111111
       flag = true;
       
-    } else if (vis[rc][c][gm] == co) {
+    } else if (vis[State(rc, c, gm)] == co){
       for (int i = 0; i < 4; ++i) {
 	pnrc = move(i, rc, R, C);
 	nr = (pnrc.second).first;
@@ -196,22 +218,18 @@ pair<bool, unsigned long long> dijkstra(int rc, unsigned long long gold, int R, 
                   
 	if (pnrc.first) {
 	  nc = roll[c][i];
-	  ncgm = checkGold(id, maps, nrc, nc, maps[gm], sz);
+	  ncgm = checkGold(nrc, nc, gm, sz);
 	  nc = (ncgm.second).first;
 	  ngm = (ncgm.second).second;
-	  
+	                
 	  if (ncgm.first)
-	    ac = B;
-
-	  if (ngm >= vis[nrc][nc].size())
-	    vis[nrc][nc].resize(ngm + sz2, -1);
-
+	    ac = B;   
+	  ns = State(nrc, nc, ngm);
 	  cost = co + ac;
-	  isVis = vis[nrc][nc][ngm];
-	 
-	  if (isVis == -1 || isVis > cost) {
-	    vis[nrc][nc][ngm] = cost;
-	    q.emplace(make_pair(cost, State(nrc, nc, ngm)));
+
+	  if (vis.find(ns) == vis.end() || vis[ns] > cost) {
+	    vis[ns] = cost;
+	    q.push(qState(cost, nrc, nc, ngm));
 	  }
 	}
       }
@@ -246,6 +264,7 @@ int main() {
 	flag = gCount == 6 && rc != -1;
       }
     }
+            
     res = dijkstra(rc, gold, R, C, A, B);
             
     if (res.first)
@@ -255,3 +274,4 @@ int main() {
   } 
   return 0;
 }
+
