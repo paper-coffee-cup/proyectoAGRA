@@ -165,6 +165,7 @@ unsigned long long dijkstra(int rc, unsigned long long gold, int R, int C, int A
 
   priority_queue<State, vector<State>, greater<State>> q;
   pair<bool, pair<int, unsigned long long>> ncgm;
+  unordered_map<int, int>* mAux;
   
   int co, c, nrc, nc, cost, ac, sz = R * C - 1;
   unsigned long long gm, ngm;
@@ -201,9 +202,10 @@ unsigned long long dijkstra(int rc, unsigned long long gold, int R, int C, int A
 	  if (ncgm.first)
 	    ac = B;   
 	  cost = co + ac;
+	  mAux = &vis[nrc][nc];
 
-	  if (vis[nrc][nc].find(ngm) == vis[nrc][nc].end() || vis[nrc][nc][ngm] > cost) {
-	    vis[nrc][nc][ngm] = cost;
+	  if ((*mAux).find(ngm) == (*mAux).end() || (*mAux)[ngm] > cost) {
+	    (*mAux)[ngm] = cost;
 	    q.emplace(State(cost, nrc, nc, ngm));
 	  }
 	}
